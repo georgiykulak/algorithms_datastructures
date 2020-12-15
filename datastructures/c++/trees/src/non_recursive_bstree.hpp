@@ -15,6 +15,7 @@
 #include <ostream>
 #include <iostream>
 #include <cassert>
+#include <vector>
 // #include "helpers/ptr_wrapper.hpp"
 
 namespace bst
@@ -63,7 +64,7 @@ public:
 
     Iterator find ( Value const & ) const;
 
-    bool insert ( Value const & );
+    bool insert ( Value const & ); // fix it !!!
 
     bool remove ( Value const & );
     
@@ -76,6 +77,27 @@ public:
     Iterator min () const;
 
     Iterator max () const;
+
+    std::vector< Value > getVector () const
+    {
+        std::vector< Value > vec;
+
+        /*
+        for ( auto it = begin(); it != end(); ++it ) // problem here !!!!!
+        {
+            vec.push_back( it->value );
+        }
+        */
+
+        ///*
+        if ( empty() )
+            return vec;
+
+        addToVector( vec, m_root );
+        //*/
+
+        return vec;
+    }
 
     // TODO: Some strange functions in derivated class later
 
@@ -111,12 +133,29 @@ private:
 
     Pointer m_root{ nullptr };
 
+    static Iterator end ( Pointer );
+
+    static Iterator min ( Pointer );
+
+    static Iterator max ( Pointer );
+
     static Iterator internalFind ( Pointer, Value const & );
 
     static Iterator internalSuccessor ( Pointer, Value const & );
 
     template< class F >
     bool iterate ( F );
+
+    void addToVector( std::vector< Value >& vec, Pointer ptr ) const
+    {
+        if ( !ptr )
+            return;
+
+        addToVector( vec, ptr->left );
+        addToVector( vec, ptr->right );
+
+        vec.push_back( ptr->value );
+    }
 };
 
 //----------------------------------------------------------------------------//
@@ -144,7 +183,7 @@ public:
 
     Iterator ( Iterator const & it )
     {
-        m_root = it.m_root;
+        m_rootRef = it.m_rootRef;
         m_ptr = it.m_ptr;
     }
 
@@ -153,13 +192,13 @@ public:
         ,   NonRecursiveBSTree< T >::Pointer const & ptr
     )
     {
-        m_root = root;
+        m_rootRef = root;
         m_ptr = ptr;
     }
 
     Iterator operator= ( Iterator const & it )
     {
-        m_root = it.m_root;
+        m_rootRef = it.m_rootRef;
         m_ptr = it.m_ptr;
     }
 
@@ -170,7 +209,7 @@ public:
 
     bool operator== ( Iterator const & right ) const
     {
-        if ( m_root != right.m_root )
+        if ( m_rootRef != right.m_rootRef )
             return false;
 
         return m_ptr == right.m_ptr;
@@ -178,7 +217,7 @@ public:
 
     bool operator!= ( Iterator const & right ) const
     {
-        if ( m_root == right.m_root )
+        if ( m_rootRef == right.m_rootRef )
             return false;
             
         return m_ptr != right.m_ptr;
@@ -199,14 +238,14 @@ public:
         if ( !m_ptr )
             return *this;
         
-        NonRecursiveBSTree< T >::internalSuccessor( m_root, m_ptr->value );
+        NonRecursiveBSTree< T >::internalSuccessor( m_rootRef, m_ptr->value );
 
         return *this;
     }
     
 private:
     NonRecursiveBSTree< T >::Pointer m_ptr{ nullptr };
-    NonRecursiveBSTree< T >::Pointer m_root{ nullptr };
+    NonRecursiveBSTree< T >::Pointer m_rootRef{ nullptr };
 };
 
 //----------------------------------------------------------------------------//
@@ -276,7 +315,7 @@ typename NonRecursiveBSTree< T >::Iterator NonRecursiveBSTree< T >::begin () con
 template< class T >
 typename NonRecursiveBSTree< T >::Iterator NonRecursiveBSTree< T >::end () const
 {
-    return Iterator( m_root, nullptr );
+    return end( m_root );
 }
 
 //----------------------------------------------------------------------------//
@@ -305,30 +344,24 @@ bool NonRecursiveBSTree< T >::empty () const
 template< class T >
 bool NonRecursiveBSTree< T >::clear ()
 {
-DEBUG( "\nbefore empty check" );
     if ( empty() )
         return false;
-DEBUG( "after empty check" );
 
-    Pointer ptr = m_root;
+    /*Pointer ptr = m_root;
     int i = 0;
 
-    /*while ( ptr )
+    while ( ptr )
     {
-DEBUG( "in start of loop i = " << i ); 
         if ( ptr->left )
         {
-DEBUG( "in condition 1" ); 
             ptr = ptr->left;
         }
         else if ( ptr->right )
         {
-DEBUG( "in condition 2" ); 
             ptr = ptr->right;
         }
         else if ( !ptr->left && !ptr->right )
         {
-DEBUG( "in condition 3" ); 
             Pointer tmp = ptr;
 
             if ( ptr->parent )
@@ -344,7 +377,6 @@ DEBUG( "in condition 3" );
             delete tmp;
             ptr = m_root;
         }
-DEBUG( "in end of loop i = " << i++ ); 
     }*/
 
     for ( auto it = begin(); it != end(); ++it )
@@ -378,15 +410,12 @@ typename NonRecursiveBSTree< T >::Iterator NonRecursiveBSTree< T >::find (
 template< class T >
 bool NonRecursiveBSTree< T >::insert ( Value const & value )
 {
-DEBUG( "before empty check" );
     if ( empty() )
     {
         m_root = new Node();
         m_root->value = value;
         return true;
     }
-
-DEBUG( "after empty check" );
 
     Pointer ptr = m_root;
 
@@ -423,6 +452,7 @@ DEBUG( "after empty check" );
             }
         }
     }
+DEBUG( "after loop" );
 
     return true;
 }
@@ -546,22 +576,7 @@ typename NonRecursiveBSTree< T >::Iterator NonRecursiveBSTree< T >::predecessor 
 template< class T >
 typename NonRecursiveBSTree< T >::Iterator NonRecursiveBSTree< T >::min () const
 {
-DEBUG( "before empty check" );
-    if ( empty() )
-        return end();
-DEBUG( "after empty check" );
-
-    Pointer ptr = m_root;
-
-int i = 0;
-    while ( ptr->left )
-    {
-DEBUG( "in loop, i = " << ++i );
-        ptr = ptr->left;
-    }
-DEBUG( "after loop, m_root = " << m_root << " ptr = " << ptr << " m_root->value = " << m_root->value );
-
-    return Iterator( m_root, ptr );
+    return min( m_root );
 }
 
 //----------------------------------------------------------------------------//
@@ -569,21 +584,58 @@ DEBUG( "after loop, m_root = " << m_root << " ptr = " << ptr << " m_root->value 
 template< class T >
 typename NonRecursiveBSTree< T >::Iterator NonRecursiveBSTree< T >::max () const
 {
-    if ( empty() )
-        return end();
+    return max( m_root );
+}
 
-    Pointer ptr = m_root;
+//----------------------------------------------------------------------------//
+// Private implementations                                                    //
+//----------------------------------------------------------------------------//
+
+template< class T >
+typename NonRecursiveBSTree< T >::Iterator
+NonRecursiveBSTree< T >::end ( Pointer root )
+{
+    return Iterator( root, nullptr );
+}
+
+//----------------------------------------------------------------------------//
+
+template< class T >
+typename NonRecursiveBSTree< T >::Iterator
+NonRecursiveBSTree< T >::min ( Pointer root )
+{
+    if ( !root )
+        return end( root );
+
+    Pointer ptr = root;
+
+    while ( ptr->left )
+    {
+        ptr = ptr->left;
+    }
+
+    return end( root );
+}
+
+//----------------------------------------------------------------------------//
+
+template< class T >
+typename NonRecursiveBSTree< T >::Iterator
+NonRecursiveBSTree< T >::max ( Pointer root )
+{
+    if ( !root )
+        return end( root );
+
+    Pointer ptr = root;
 
     while ( ptr->right )
     {
         ptr = ptr->right;
     }
 
-    return Iterator( m_root, ptr );
+    return end( root );
 }
 
-//----------------------------------------------------------------------------//
-// Private implementations                                                    //
 //----------------------------------------------------------------------------//
 
 template< class T >
@@ -608,7 +660,7 @@ NonRecursiveBSTree< T >::internalFind (
             return Iterator( root, ptr );
     }
 
-    return Iterator( root, nullptr );
+    return end( root );
 }
 
 //----------------------------------------------------------------------------//
@@ -619,10 +671,15 @@ NonRecursiveBSTree< T >::internalSuccessor (
     Pointer root, Value const & value
 )
 {
+DEBUG( "Before internalFind" );
     auto it = internalFind( root, value );
+DEBUG( "After internalFind and before check of end" );
 
-    if ( it == nullptr )
-        return Iterator( root, nullptr );
+    if ( it == end( root ) )
+        return end( root );
+
+    if ( it == max( root ) )
+        return end( root );
 
     if ( it->right == nullptr )
         return Iterator( root, it->parent );
@@ -655,12 +712,8 @@ std::ostream& operator<< (
     ,   bst::NonRecursiveBSTree< T > const & tree
 )
 {
-DEBUG( "before loop" );
-    int i = 0;
     for ( auto it = tree.begin(); it != tree.end(); )
     {
-DEBUG( "in loop, i = " << i++ );
-        
         os << it->value;
 
         ++it;
