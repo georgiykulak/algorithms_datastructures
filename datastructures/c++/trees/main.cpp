@@ -16,7 +16,7 @@ int main()
     obj1.insert( 0.21 );
     obj1.insert( 2.5 );
     assert( !obj1.empty() );
-    //assert( obj1.size() == 3 );
+    assert( obj1.size() == 3 );
     assert( *( obj1.min() ) == 0.21 );
     assert( *( obj1.max() ) == 2.5 );
     assert( *( obj1.successor( 0.21 ) ) == 1.35 );

@@ -54,11 +54,11 @@ public:
 
     Iterator end () const;
 
-    Size size () const;
+    Size size () const; // FIX IT
 
     bool empty () const;
 
-    bool clear ();
+    bool clear (); // FIX IT
 
     bool isEnd ( Iterator const & ) const;
 
@@ -66,9 +66,9 @@ public:
 
     bool insert ( Value const & );
 
-    bool remove ( Value const & );
+    bool remove ( Value const & ); // CHECK IT
     
-    bool replace ( Value const &, Value const & );
+    bool replace ( Value const &, Value const & ); // CHECK IT
 
     Iterator successor ( Value const & ) const;
 
@@ -78,7 +78,7 @@ public:
 
     Iterator max () const;
 
-    std::vector< Value > getVector () const
+    std::vector< Value > getVector () const // remove soon
     {
         std::vector< Value > vec;
 
@@ -218,7 +218,7 @@ public:
 
     bool operator!= ( Iterator const & right ) const
     {
-        if ( m_rootRef == right.m_rootRef )
+        if ( m_rootRef != right.m_rootRef )
             return false;
             
         return m_ptr != right.m_ptr;
@@ -374,9 +374,6 @@ bool NonRecursiveBSTree< T >::clear ()
             ptr = m_root;
         }
     }*/
-
-    for ( auto it = begin(); it != end(); ++it )
-        remove( it->value );
 
     m_root = nullptr;
 
@@ -748,16 +745,8 @@ std::ostream& operator<< (
     ,   bst::NonRecursiveBSTree< T > const & tree
 )
 {
-    auto it = tree.begin();
-    for ( ;; )
-    {
-        os << *it << ' ';
-
-        ++it;
-
-        if ( it == tree.end() )
-            break;
-    }
+    for ( auto const it : tree )
+        os << it << ' ';
 
     return os;
 }
