@@ -1,14 +1,6 @@
 #ifndef __NON_RECURSIVE_BINARY_SEARCH_TREE_HPP__
 #define __NON_RECURSIVE_BINARY_SEARCH_TREE_HPP__
 
-#ifndef NO_DEBUG
-#define DEBUG( out )    \
-    std::cout << "Location: " << __FUNCTION__ << "; Line: " << __LINE__ << std::endl; \
-    std::cout << out << std::endl;
-#else
-#define DEBUG( out ) ;
-#endif /* NO_DEBUG */
-
 #include <memory>
 #include <functional>
 #include <cstdlib>
@@ -663,26 +655,20 @@ NonRecursiveBSTree< T >::internalSuccessor (
     Pointer root, Value const & value
 )
 {
-DEBUG( "Before internalFind" );
     auto it = internalFind( root, value );
-DEBUG( "After internalFind and before check of end, it->value = " << it->value );
 
     if ( it == end( root ) )
         return end( root );
 
-DEBUG( "After check of end and before check of max" );
     if ( it == max( root ) )
         return end( root );
 
     Pointer ptr;
 
-DEBUG( "After check of max and before condition" );
     if ( it->parent )
     {
-DEBUG( "Parent is NOT nullptr" );
         if ( it->parent->left == it.m_ptr )
         {
-DEBUG( "Left of parent is same value" );
             if ( !it->right )
                 return Iterator( root, it->parent );
 
@@ -695,14 +681,11 @@ DEBUG( "Left of parent is same value" );
         else
         {
             ptr = it->parent;
-DEBUG( "Right of parent is same value, ptr = " << ptr->value );
 
             while ( ptr->parent )
             {
-                //DEBUG( "in loop ptr->value = " << ptr->value );
                 if ( ptr->parent->left == ptr )
                 {
-                    DEBUG( "in left condition of loop" );
                     return Iterator( root, ptr->parent );
                 }
                 else
@@ -714,7 +697,6 @@ DEBUG( "Right of parent is same value, ptr = " << ptr->value );
     }
     else
     {
-DEBUG( "Parent is nullptr" );
         ptr = it->right;
 
         while ( ptr->left )
@@ -724,7 +706,6 @@ DEBUG( "Parent is nullptr" );
     }
 
     assert( ptr );
-DEBUG( "After assert and before return" );
     return Iterator( root, ptr );
 }
 
@@ -745,8 +726,15 @@ std::ostream& operator<< (
     ,   bst::NonRecursiveBSTree< T > const & tree
 )
 {
-    for ( auto const it : tree )
-        os << it << ' ';
+    for ( auto it = tree.begin(); it != tree.end(); )
+    {
+        os << *it;
+
+        ++it;
+
+        if ( it != tree.end() )
+            os << ' ';
+    }
 
     return os;
 }

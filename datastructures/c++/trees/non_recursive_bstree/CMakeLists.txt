@@ -15,6 +15,4 @@ add_library( ds_trees_nr_bst OBJECT src/non_recursive_bstree.hpp )
 target_include_directories( ds_trees_nr_bst PUBLIC ${CMAKE_SOURCE_DIR}/src )
 target_include_directories( ds_trees_nr_bst PUBLIC ${CMAKE_SOURCE_DIR}/../../../../common/c++/ )
 
-#init_gtest()
-
 add_gtest( ds_trees_nr_bst basic test/basic.cpp )
