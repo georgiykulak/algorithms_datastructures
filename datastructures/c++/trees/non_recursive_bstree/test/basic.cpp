@@ -23,10 +23,24 @@ TEST( Basic, Basic )
     EXPECT_EQ( obj1.successor( 2.5 ), obj1.end() );
     EXPECT_EQ( obj1.begin(), obj1.min() );
 
-    std::ostringstream os;
-    os << obj1;
+    std::ostringstream os1;
+    os1 << obj1;
 
-    EXPECT_EQ( os.str(), "0.21 1.35 2.5" );
+    EXPECT_EQ( os1.str(), "0.21 1.35 2.5" );
+
+    obj1.remove( 1.35 );
+
+    std::ostringstream os2;
+    os2 << obj1;
+
+    EXPECT_EQ( os2.str(), "0.21 2.5" );
+
+    obj1.remove( 2.5 );
+
+    std::ostringstream os3;
+    os3 << obj1;
+
+    EXPECT_EQ( os3.str(), "0.21" );
 }
 
 TESTBENCH();

@@ -46,11 +46,11 @@ public:
 
     Iterator end () const;
 
-    Size size () const; // FIX IT
+    Size size () const;
 
     bool empty () const;
 
-    bool clear (); // FIX IT
+    bool clear ();
 
     bool isEnd ( Iterator const & ) const;
 
@@ -58,7 +58,7 @@ public:
 
     bool insert ( Value const & );
 
-    bool remove ( Value const & ); // CHECK IT
+    bool remove ( Value const & );
     
     bool replace ( Value const &, Value const & ); // CHECK IT
 
@@ -73,20 +73,11 @@ public:
     std::vector< Value > getVector () const // remove soon
     {
         std::vector< Value > vec;
-
-        /*
-        for ( auto it = begin(); it != end(); ++it ) // problem here !!!!!
-        {
-            vec.push_back( it->value );
-        }
-        */
-
-        ///*
+        
         if ( empty() )
             return vec;
 
         addToVector( vec, m_root );
-        //*/
 
         return vec;
     }
@@ -134,9 +125,6 @@ private:
     static Iterator internalFind ( Pointer, Value const & );
 
     static Iterator internalSuccessor ( Pointer, Value const & );
-
-    template< class F >
-    bool iterate ( F );
 
     void addToVector( std::vector< Value >& vec, Pointer ptr ) const
     {
@@ -334,41 +322,17 @@ bool NonRecursiveBSTree< T >::clear ()
 {
     if ( empty() )
         return false;
-
-    /*Pointer ptr = m_root;
-    int i = 0;
-
-    while ( ptr )
+        
+    while ( true )
     {
-        if ( ptr->left )
-        {
-            ptr = ptr->left;
-        }
-        else if ( ptr->right )
-        {
-            ptr = ptr->right;
-        }
-        else if ( !ptr->left && !ptr->right )
-        {
-            Pointer tmp = ptr;
+        auto it = min();
 
-            if ( ptr->parent )
-            {
-                if ( ptr == ptr->parent->left )
-                    ptr->parent->left = nullptr;
-                else
-                    ptr->parent->right = nullptr;
-            
-                ptr = ptr->parent;
-            }
+        if ( isEnd( it ) )
+            break;
 
-            delete tmp;
-            ptr = m_root;
-        }
-    }*/
-
-    m_root = nullptr;
-
+        remove( *it );
+    }
+    
     return true;
 }
 
@@ -453,6 +417,74 @@ bool NonRecursiveBSTree< T >::remove ( Value const & value )
 
     if ( !it->left && !it->right )
     {
+        if ( it->parent )
+            if ( it.m_ptr == it->parent->left )
+                it->parent->left = nullptr;
+            else
+                it->parent->right = nullptr;
+        
+        it->parent = nullptr;
+
+        if ( it.m_ptr == m_root )
+            m_root = nullptr;
+
+        delete it.m_ptr;
+    }
+    else if ( it->left && !it->right )
+    {
+        if ( it->parent )
+            if ( it.m_ptr == it->parent->left )
+                it->parent->left = it->left;
+            else
+                it->parent->right = it->left;
+
+        it->left->parent = it->parent;
+        
+        if ( it.m_ptr == m_root )
+            m_root = it->left;
+        
+        it->parent = nullptr;
+        it->left = nullptr;
+        delete it.m_ptr;
+    }
+    else if ( !it->left && it->right )
+    {
+        if ( it->parent )
+            if ( it.m_ptr == it->parent->left )
+                it->parent->left = it->right;
+            else
+                it->parent->right = it->right;
+
+        it->right->parent = it->parent;
+        
+        if ( it.m_ptr == m_root )
+            m_root = it->right;
+        
+        it->parent = nullptr;
+        it->right = nullptr;
+        delete it.m_ptr;
+    }
+    else
+    {
+        auto succ = min( it->right );
+
+        if ( succ == end( it->right ) )
+            succ.m_ptr = it->right;
+
+        it->value = succ->value;
+
+        if ( succ->parent )
+            if ( succ.m_ptr == succ->parent->left )
+                succ->parent->left = nullptr;
+            else
+                succ->parent->right = nullptr;
+        
+        succ->parent = nullptr;
+        delete succ.m_ptr;
+    }
+
+    /*if ( !it->left && !it->right )
+    {
         delete it.m_ptr;
         return true;
     }
@@ -497,7 +529,7 @@ bool NonRecursiveBSTree< T >::remove ( Value const & value )
     }
 
     tmp->parent = ptr;
-
+    */
     return true;
 }
 
@@ -707,15 +739,6 @@ NonRecursiveBSTree< T >::internalSuccessor (
 
     assert( ptr );
     return Iterator( root, ptr );
-}
-
-//----------------------------------------------------------------------------//
-
-template< class T >
-template< class F >
-bool NonRecursiveBSTree< T >::iterate ( F f )
-{
-    return true;
 }
 
 } // namespace bst
