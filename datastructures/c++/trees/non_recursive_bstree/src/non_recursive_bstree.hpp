@@ -323,7 +323,7 @@ bool NonRecursiveBSTree< T >::clear ()
     if ( empty() )
         return false;
         
-    while ( true )
+    while ( m_root )
     {
         auto it = min();
 
